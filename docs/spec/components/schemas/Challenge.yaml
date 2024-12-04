@@ -10,7 +10,5 @@ allOf:
         properties:
           challenge:
             type: string
-            description: |
-              Base64 encoded challenge. Use it to generate Query ZK-proof.
-              Decode base64 string and convert into big-endian decimal number.
-            example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9
+            description: Random hex strings challenge which must be signed by user to authorize
+            example: abcdef...123456

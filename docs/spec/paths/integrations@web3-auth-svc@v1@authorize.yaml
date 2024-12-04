@@ -3,7 +3,7 @@ post:
     - Authorize
   summary: Authorize user
   description: |
-    Authorize user by ZKP and receive JWT.
+    Authorize user with signed challenge and receive JWT.
   operationId: authorize
   requestBody:
     required: true
@@ -30,5 +30,9 @@ post:
                 $ref: '#/components/schemas/Token'
     400:
       $ref: '#/components/responses/invalidParameter'
+    401:
+      $ref: '#/components/responses/invalidAuth'
+    404:
+      $ref: '#/components/responses/notFound'
     500:
       $ref: '#/components/responses/internalError'

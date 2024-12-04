@@ -3,10 +3,10 @@ get:
     - Authorize
   summary: Request challenge
   description: |
-    Request challenge to generate Query proof with
+    Request challenge to sign
   operationId: challenge
   parameters:
-    - $ref: '#/components/parameters/pathNullifier'
+    - $ref: '#/components/parameters/pathAddress'
   responses:
     200:
       description: Success
@@ -21,7 +21,5 @@ get:
                 $ref: '#/components/schemas/Challenge'
     400:
       $ref: '#/components/responses/invalidParameter'
-    401:
-      $ref: '#/components/responses/invalidAuth'
     500:
       $ref: '#/components/responses/internalError'

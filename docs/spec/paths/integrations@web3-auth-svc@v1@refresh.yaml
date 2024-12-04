@@ -3,7 +3,7 @@ get:
     - Authorize
   summary: Refresh JWT
   security:
-    - JWTAuth: [ ]
+    - BearerAuth: [ ]
   description: |
     Issue new JWT based on refresh token
   operationId: refresh
@@ -19,8 +19,6 @@ get:
             properties:
               data:
                 $ref: '#/components/schemas/Token'
-    400:
-      $ref: '#/components/responses/invalidParameter'
     401:
       $ref: '#/components/responses/invalidAuth'
     500:

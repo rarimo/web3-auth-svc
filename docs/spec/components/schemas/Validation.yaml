@@ -1,5 +1,5 @@
 allOf:
-  - $ref: '#/components/schemas/ValidationResultKey'
+  - $ref: '#/components/schemas/ValidationKey'
   - type: object
     required:
       - attributes
