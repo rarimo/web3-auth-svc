@@ -1,0 +1,388 @@
+openapi: 3.0.0
+info:
+  version: 1.0.0
+  title: web3-auth-svc
+  description: ''
+servers:
+  - url: 'https://api.orgs.app.stage.rarime.com/integrations/web3-auth-svc'
+    description: RariMe Stage envirinment
+paths:
+  /v1/authorize:
+    post:
+      tags:
+        - Authorize
+      summary: Authorize user
+      description: |
+        Authorize user by ZKP and receive JWT.
+      operationId: authorize
+      requestBody:
+        required: true
+        content:
+          application/vnd.api+json:
+            schema:
+              type: object
+              required:
+                - data
+              properties:
+                data:
+                  $ref: '#/components/schemas/Authorize'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/vnd.api+json:
+              schema:
+                type: object
+                required:
+                  - data
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Token'
+        '400':
+          $ref: '#/components/responses/invalidParameter'
+        '500':
+          $ref: '#/components/responses/internalError'
+  '/v1/authorize/{nullifier}/challenge':
+    get:
+      tags:
+        - Authorize
+      summary: Request challenge
+      description: |
+        Request challenge to generate Query proof with
+      operationId: challenge
+      parameters:
+        - $ref: '#/components/parameters/pathNullifier'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/vnd.api+json:
+              schema:
+                type: object
+                required:
+                  - data
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Challenge'
+        '400':
+          $ref: '#/components/responses/invalidParameter'
+        '401':
+          $ref: '#/components/responses/invalidAuth'
+        '500':
+          $ref: '#/components/responses/internalError'
+  /v1/refresh:
+    get:
+      tags:
+        - Authorize
+      summary: Refresh JWT
+      security:
+        - JWTAuth: []
+      description: |
+        Issue new JWT based on refresh token
+      operationId: refresh
+      responses:
+        '200':
+          description: Success
+          content:
+            application/vnd.api+json:
+              schema:
+                type: object
+                required:
+                  - data
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Token'
+        '400':
+          $ref: '#/components/responses/invalidParameter'
+        '401':
+          $ref: '#/components/responses/invalidAuth'
+        '500':
+          $ref: '#/components/responses/internalError'
+  /v1/validate:
+    get:
+      tags:
+        - Authorize
+      summary: Validate JWT
+      security:
+        - JWTAuth: []
+      description: |
+        Validates JWT provided in Bearer Header and returns decoded claims
+      operationId: validate
+      responses:
+        '200':
+          description: Success
+          content:
+            application/vnd.api+json:
+              schema:
+                type: object
+                required:
+                  - data
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ValidationResult'
+        '400':
+          $ref: '#/components/responses/invalidParameter'
+        '401':
+          $ref: '#/components/responses/invalidAuth'
+        '500':
+          $ref: '#/components/responses/internalError'
+components:
+  schemas:
+    Authorize:
+      allOf:
+        - $ref: '#/components/schemas/AuthorizeKey'
+        - type: object
+          x-go-is-request: true
+          required:
+            - attributes
+          properties:
+            attributes:
+              required:
+                - proof
+              type: object
+              properties:
+                proof:
+                  type: object
+                  format: json.RawMessage
+                  description: JSON-encoded Query ZK-proof.
+    AuthorizeKey:
+      type: object
+      required:
+        - id
+        - type
+      properties:
+        id:
+          type: string
+          example: 0x123...abc
+          pattern: '^0x[0-9a-fA-F]{64}$'
+          description: User nullifier 32 bytes
+        type:
+          type: string
+          enum:
+            - authorize
+    Challenge:
+      allOf:
+        - $ref: '#/components/schemas/ChallengeKey'
+        - type: object
+          required:
+            - attributes
+          properties:
+            attributes:
+              required:
+                - challenge
+              properties:
+                challenge:
+                  type: string
+                  description: |
+                    Base64 encoded challenge. Use it to generate Query ZK-proof.
+                    Decode base64 string and convert into big-endian decimal number.
+                  example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9
+    ChallengeKey:
+      type: object
+      required:
+        - id
+        - type
+      properties:
+        id:
+          type: string
+          example: 0x123...abc
+          pattern: '^0x[0-9a-fA-F]{64}$'
+          description: User nullifier 32 bytes
+        type:
+          type: string
+          enum:
+            - challenge
+    Claim:
+      description: Authorized user personal data
+      type: object
+      required:
+        - nullifier
+      properties:
+        nullifier:
+          type: string
+          example: 0x123...abc
+          pattern: '^0x[0-9a-fA-F]{64}$'
+          description: Nullifier authorized with
+    Errors:
+      description: 'Standard JSON:API error'
+      type: object
+      required:
+        - errors
+      properties:
+        errors:
+          type: array
+          description: Non empty array of errors occurred during request processing
+          items:
+            type: object
+            required:
+              - title
+              - status
+            properties:
+              title:
+                type: string
+                description: 'Title is a short, human-readable summary of the problem'
+                example: Bad Request
+              detail:
+                type: string
+                description: Detail is a human-readable explanation specific to this occurrence of the problem
+                example: Request body was expected
+              status:
+                type: integer
+                description: Status is the HTTP status code applicable to this problem
+                example: 400
+                enum:
+                  - 400
+                  - 401
+                  - 403
+                  - 404
+                  - 409
+                  - 500
+    JWT:
+      description: JWT token
+      type: object
+      required:
+        - token
+        - token_type
+      properties:
+        token:
+          type: string
+          description: Base64 encoded JWT
+          example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c
+        token_type:
+          type: string
+          enum:
+            - access
+            - refresh
+    Token:
+      allOf:
+        - $ref: '#/components/schemas/TokenKey'
+        - type: object
+          required:
+            - attributes
+          properties:
+            attributes:
+              required:
+                - access_token
+                - refresh_token
+              type: object
+              properties:
+                access_token:
+                  $ref: '#/components/schemas/JWT'
+                refresh_token:
+                  $ref: '#/components/schemas/JWT'
+    TokenKey:
+      type: object
+      required:
+        - id
+        - type
+      properties:
+        id:
+          type: string
+          example: 0x123...abc
+          pattern: '^0x[0-9a-fA-F]{64}$'
+          description: User nullifier 32 bytes
+        type:
+          type: string
+          enum:
+            - token
+    ValidationResult:
+      allOf:
+        - $ref: '#/components/schemas/ValidationResultKey'
+        - type: object
+          required:
+            - attributes
+          properties:
+            attributes:
+              required:
+                - claims
+              type: object
+              properties:
+                claims:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/Claim'
+    ValidationResultKey:
+      type: object
+      required:
+        - id
+        - type
+      properties:
+        id:
+          type: string
+          example: 0x123...abc
+          pattern: '^0x[0-9a-fA-F]{64}$'
+          description: User nullifier 32 bytes
+        type:
+          type: string
+          enum:
+            - validation
+  responses:
+    internalError:
+      description: Internal server error
+      content:
+        application/vnd.api+json:
+          schema:
+            $ref: '#/components/schemas/Errors'
+    invalidAuth:
+      description: Failed to authorize JWT
+      content:
+        application/vnd.api+json:
+          schema:
+            $ref: '#/components/schemas/Errors'
+    invalidParameter:
+      description: One of the parameters is invalid. Refer to the response body for details.
+      content:
+        application/vnd.api+json:
+          schema:
+            $ref: '#/components/schemas/Errors'
+    notFound:
+      description: Requested resource does not exist.
+      content:
+        application/vnd.api+json:
+          schema:
+            $ref: '#/components/schemas/Errors'
+  parameters:
+    pageLimitParam:
+      in: query
+      name: 'page[limit]'
+      required: false
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 100
+        default: 15
+        description: Numbers of items per page to return.
+    pageNumberParam:
+      in: query
+      name: 'page[number]'
+      required: false
+      schema:
+        type: integer
+      description: The number of a page to return.
+    pathNullifier:
+      in: path
+      name: nullifier
+      required: true
+      schema:
+        type: string
+        example: 0x123...abc
+        pattern: '^0x[0-9a-fA-F]{64}$'
+        description: User nullifier 32 bytes
+    sortingParam:
+      in: query
+      name: 'page[order]'
+      required: false
+      schema:
+        type: string
+        enum:
+          - asc
+          - desc
+        default: desc
+        description: 'Order of records on the page. If sortingParam is not specified, order of records is by default sorted by ID.'
+  securitySchemes:
+    JWTAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
