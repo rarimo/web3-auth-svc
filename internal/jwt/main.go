@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"time"
 
-	jwt "github.com/golang-jwt/jwt/v5"
+	"github.com/golang-jwt/jwt/v5"
 )
 
 const (
@@ -20,18 +20,16 @@ type JWTIssuer struct {
 }
 
 func (i *JWTIssuer) IssueJWT(claim *AuthClaim) (token string, exp time.Time, err error) {
-	raw := (&RawJWT{make(jwt.MapClaims)}).SetNullifier(claim.Nullifier)
-
 	exp = time.Now().UTC()
 
 	switch claim.Type {
 	case AccessTokenType:
 		exp = exp.Add(i.accessExpiration)
-		raw.SetTokenAccess().SetExpirationTimestamp(exp)
 	case RefreshTokenType:
 		exp = exp.Add(i.refreshExpiration)
-		raw.SetTokenRefresh().SetExpirationTimestamp(exp)
 	}
+
+	raw := (&RawJWT{make(jwt.MapClaims)}).SetAddress(claim.Address).SetTokenType(claim.Type).SetExpirationTimestamp(exp)
 
 	token, err = jwt.NewWithClaims(jwt.SigningMethodHS256, raw.claims).SignedString(i.prv)
 	return
@@ -49,7 +47,7 @@ func (i *JWTIssuer) ValidateJWT(str string) (claim *AuthClaim, err error) {
 	}
 
 	if token, err = jwt.Parse(str, key, jwt.WithExpirationRequired()); err != nil {
-		return
+		return nil, err
 	}
 
 	var (
@@ -57,22 +55,19 @@ func (i *JWTIssuer) ValidateJWT(str string) (claim *AuthClaim, err error) {
 		ok  bool
 	)
 	if raw.claims, ok = token.Claims.(jwt.MapClaims); !ok {
-		err = errors.New("failed to unwrap claims")
-		return
+		return nil, errors.New("failed to unwrap claims")
 	}
 
 	claim = &AuthClaim{}
 
-	claim.Nullifier, ok = raw.Nullifier()
+	claim.Address, ok = raw.Address()
 	if !ok {
-		err = errors.New("invalid nullifier: failed to parse")
-		return
+		return nil, errors.New("invalid address: failed to parse")
 	}
 
 	claim.Type, ok = raw.TokenType()
 	if !ok {
-		err = errors.New("invalid token type: failed to parse")
-		return
+		return nil, errors.New("invalid token type: failed to parse")
 	}
 
 	return
