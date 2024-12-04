@@ -12,7 +12,7 @@ import (
 )
 
 const (
-	FullValidatePath = "integrations/global-auth-svc/v1/validate"
+	FullValidatePath = "integrations/web3-auth-svc/v1/validate"
 )
 
 type Client struct {

@@ -7,7 +7,7 @@
 RariMe Auth service designed to authorize users with Iden3 AuthV2 ZK-proofs and issue JWT tokens based on it.
 This JWT can be used on other internal or external service to authenticate user for executing endpoints.
 
-Frontend firstly should request Base64-encoded challenge using `v1/authorize/{nullifier}/challenge` request.
+Frontend firstly should request Base64-encoded challenge using `v1/authorize/{address}/challenge` request.
 Then generate AuthV2 ZK proof with received challenge as decoded big-endian value. Using this proof
 execute `v1/authorize` request and receive JWT (refresh and access) tokens in response and also in cookies.
 
@@ -53,19 +53,19 @@ How protected endpoints definition looks like:
 
 ```go
 r.Route("/integrations/your-service", func (r chi.Router) {
-r.Route("/v1", func (r chi.Router) {
-r.Post("/unprotected", handlers.Unprotected)
-r.With(middleware.AuthMiddleware(s.client)).Get("/protected", handlers.Protected)
-})
+    r.Route("/v1", func (r chi.Router) {
+        r.Post("/unprotected", handlers.Unprotected)
+        r.With(middleware.AuthMiddleware(s.client)).Get("/protected", handlers.Protected)
+    })
 })
 ```
 
 Then, use parsed claims in handler to allow users execute business logic:
 
 ```go
-if !auth.Authenticates([]resources.Claim{claim}, auth.UserGrant("nullifier")) {
-ape.RenderErr(w, problems.Unauthorized())
-return
+if !auth.Authenticates([]resources.Claim{claim}, auth.UserGrant("address")) {
+    ape.RenderErr(w, problems.Unauthorized())
+    return
 }
 ```
 

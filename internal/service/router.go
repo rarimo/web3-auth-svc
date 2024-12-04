@@ -25,7 +25,7 @@ func Run(ctx context.Context, cfg config.Config) {
 		),
 	)
 
-	r.Route("/integrations/global-auth-svc", func(r chi.Router) {
+	r.Route("/integrations/web3-auth-svc", func(r chi.Router) {
 		r.Route("/v1", func(r chi.Router) {
 			r.Route("/authorize", func(r chi.Router) {
 				r.Post("/", handlers.Authorize)
