@@ -4,9 +4,7 @@
 
 package resources
 
-import "encoding/json"
-
 type AuthorizeAttributes struct {
-	// JSON-encoded Query ZK-proof.
-	Proof json.RawMessage `json:"proof"`
+	// Backend-generated challenge, signed by user
+	Signature string `json:"signature"`
 }

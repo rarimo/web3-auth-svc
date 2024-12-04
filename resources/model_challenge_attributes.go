@@ -5,6 +5,6 @@
 package resources
 
 type ChallengeAttributes struct {
-	// Base64 encoded challenge. Use it to generate Query ZK-proof. Decode base64 string and convert into big-endian decimal number.
+	// Random hex strings challenge which must be signed by user to authorize
 	Challenge string `json:"challenge"`
 }
