@@ -1,7 +1,7 @@
 package auth
 
 import (
-	"github.com/rarimo/decentralized-auth-svc/resources"
+	"github.com/rarimo/web3-auth-svc/resources"
 )
 
 func UserGrant(nullifier string) Grant {

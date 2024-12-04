@@ -1,5 +1,5 @@
 {
-  "name": "decentralized-auth-svc",
+  "name": "web3-auth-svc",
   "version": "1.0.0",
   "dependencies": {
     "@tokend/redoc-cli": "^0.9.9",

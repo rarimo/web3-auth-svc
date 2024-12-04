@@ -6,8 +6,8 @@ import (
 	"strings"
 
 	validation "github.com/go-ozzo/ozzo-validation/v4"
-	"github.com/rarimo/decentralized-auth-svc/internal/zkp"
-	"github.com/rarimo/decentralized-auth-svc/resources"
+	"github.com/rarimo/web3-auth-svc/internal/zkp"
+	"github.com/rarimo/web3-auth-svc/resources"
 	"gitlab.com/distributed_lab/logan/v3/errors"
 )
 

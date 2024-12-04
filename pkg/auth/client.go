@@ -3,16 +3,16 @@ package auth
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/rarimo/decentralized-auth-svc/internal/cookies"
-	"github.com/rarimo/decentralized-auth-svc/internal/jwt"
+	"github.com/rarimo/web3-auth-svc/internal/cookies"
+	"github.com/rarimo/web3-auth-svc/internal/jwt"
 	"net/http"
 
-	"github.com/rarimo/decentralized-auth-svc/resources"
+	"github.com/rarimo/web3-auth-svc/resources"
 	"gitlab.com/distributed_lab/logan/v3/errors"
 )
 
 const (
-	FullValidatePath = "integrations/decentralized-auth-svc/v1/validate"
+	FullValidatePath = "integrations/web3-auth-svc/v1/validate"
 )
 
 type Client struct {

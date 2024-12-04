@@ -2,8 +2,8 @@ package cli
 
 import (
 	"github.com/alecthomas/kingpin"
-	"github.com/rarimo/decentralized-auth-svc/internal/config"
-	"github.com/rarimo/decentralized-auth-svc/internal/service"
+	"github.com/rarimo/web3-auth-svc/internal/config"
+	"github.com/rarimo/web3-auth-svc/internal/service"
 	"gitlab.com/distributed_lab/kit/kv"
 	"gitlab.com/distributed_lab/logan/v3"
 )
@@ -20,7 +20,7 @@ func Run(args []string) bool {
 	cfg := config.New(kv.MustFromEnv())
 	log = cfg.Log()
 
-	app := kingpin.New("decentralized-auth-svc", "")
+	app := kingpin.New("web3-auth-svc", "")
 
 	runCmd := app.Command("run", "run command")
 	serviceCmd := runCmd.Command("service", "run service") // you can insert custom help

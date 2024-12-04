@@ -3,7 +3,7 @@ package main
 import (
 	"os"
 
-	"github.com/rarimo/decentralized-auth-svc/internal/cli"
+	"github.com/rarimo/web3-auth-svc/internal/cli"
 )
 
 func main() {

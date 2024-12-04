@@ -6,7 +6,7 @@ import (
 
 	"github.com/go-chi/chi"
 	validation "github.com/go-ozzo/ozzo-validation/v4"
-	"github.com/rarimo/decentralized-auth-svc/internal/zkp"
+	"github.com/rarimo/web3-auth-svc/internal/zkp"
 )
 
 func GetPathNullifier(r *http.Request) (string, error) {

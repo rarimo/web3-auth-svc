@@ -3,9 +3,9 @@ package middleware
 import (
 	"net/http"
 
-	"github.com/rarimo/decentralized-auth-svc/internal/jwt"
-	"github.com/rarimo/decentralized-auth-svc/internal/service/handlers"
-	"github.com/rarimo/decentralized-auth-svc/pkg"
+	"github.com/rarimo/web3-auth-svc/internal/jwt"
+	"github.com/rarimo/web3-auth-svc/internal/service/handlers"
+	"github.com/rarimo/web3-auth-svc/pkg"
 	"gitlab.com/distributed_lab/ape"
 	"gitlab.com/distributed_lab/ape/problems"
 	"gitlab.com/distributed_lab/logan/v3"

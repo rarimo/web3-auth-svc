@@ -1,4 +1,4 @@
-# decentralized-auth-svc
+# web3-auth-svc
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
@@ -27,7 +27,7 @@ package middleware
 import (
 	"net/http"
 
-	"github.com/rarimo/decentralized-auth-svc/pkg/auth"
+	"github.com/rarimo/web3-auth-svc/pkg/auth"
 	"gitlab.com/distributed_lab/ape"
 	"gitlab.com/distributed_lab/ape/problems"
 )
@@ -72,8 +72,8 @@ return
 ## Install
 
   ```
-  git clone github.com/rarimo/decentralized-auth-svc
-  cd decentralized-auth-svc
+  git clone github.com/rarimo/web3-auth-svc
+  cd web3-auth-svc
   go build main.go
   export KV_VIPER_FILE=./config.yaml
   ./main run service
@@ -107,8 +107,8 @@ Make sure that docker installed.
 use `docker run ` with `-p 8080:80` to expose port 80 to 8080
 
   ```
-  docker build -t github.com/rarimo/decentralized-auth-svc .
-  docker run -e KV_VIPER_FILE=/config.yaml github.com/rarimo/decentralized-auth-svc
+  docker build -t github.com/rarimo/web3-auth-svc .
+  docker run -e KV_VIPER_FILE=/config.yaml github.com/rarimo/web3-auth-svc
   ```
 
 ## Running from Source

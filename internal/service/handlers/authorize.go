@@ -7,9 +7,9 @@ import (
 
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	zkptypes "github.com/iden3/go-rapidsnark/types"
-	"github.com/rarimo/decentralized-auth-svc/internal/jwt"
-	"github.com/rarimo/decentralized-auth-svc/internal/service/requests"
-	"github.com/rarimo/decentralized-auth-svc/resources"
+	"github.com/rarimo/web3-auth-svc/internal/jwt"
+	"github.com/rarimo/web3-auth-svc/internal/service/requests"
+	"github.com/rarimo/web3-auth-svc/resources"
 	"gitlab.com/distributed_lab/ape"
 	"gitlab.com/distributed_lab/ape/problems"
 )

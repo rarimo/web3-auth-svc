@@ -1,6 +1,6 @@
 package auth
 
-import "github.com/rarimo/decentralized-auth-svc/resources"
+import "github.com/rarimo/web3-auth-svc/resources"
 
 type Grant func(claim resources.Claim) bool
 
