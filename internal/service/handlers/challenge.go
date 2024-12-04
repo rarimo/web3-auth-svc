@@ -1,47 +1,34 @@
 package handlers
 
 import (
-	"math/big"
 	"net/http"
+	"strings"
 
-	"github.com/ethereum/go-ethereum/common/hexutil"
-	"github.com/rarimo/web3-auth-svc/internal/service/requests"
+	"github.com/go-chi/chi"
 	"github.com/rarimo/web3-auth-svc/resources"
 	"gitlab.com/distributed_lab/ape"
 	"gitlab.com/distributed_lab/ape/problems"
 )
 
 func RequestChallenge(w http.ResponseWriter, r *http.Request) {
-	nullifier, err := requests.GetPathNullifier(r)
-	if err != nil {
-		ape.RenderErr(w, problems.BadRequest(err)...)
-		return
-	}
+	address := strings.ToLower(chi.URLParam(r, "address"))
 
-	nullifierBytes, err := hexutil.Decode(nullifier)
-	if err != nil {
-		ape.RenderErr(w, problems.BadRequest(err)...)
-		return
-	}
-
-	challenge, err := Verifier(r).Challenge(new(big.Int).SetBytes(nullifierBytes).String())
+	challenge, err := AuthVerifier(r).Challenge(address)
 	if err != nil {
 		Log(r).WithError(err).Error("failed to generate challenge")
 		ape.RenderErr(w, problems.InternalError())
 		return
 	}
 
-	resp := resources.ChallengeResponse{
+	ape.Render(w, resources.ChallengeResponse{
 		Data: resources.Challenge{
 			Key: resources.Key{
-				ID:   nullifier,
+				ID:   address,
 				Type: resources.CHALLENGE,
 			},
 			Attributes: resources.ChallengeAttributes{
 				Challenge: challenge,
 			},
 		},
-	}
-
-	ape.Render(w, resp)
+	})
 }

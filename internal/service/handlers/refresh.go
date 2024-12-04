@@ -4,7 +4,6 @@ import (
 	"net/http"
 
 	"github.com/rarimo/web3-auth-svc/internal/jwt"
-	"github.com/rarimo/web3-auth-svc/resources"
 	"gitlab.com/distributed_lab/ape"
 	"gitlab.com/distributed_lab/ape/problems"
 )
@@ -21,52 +20,14 @@ func Refresh(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	access, aexp, err := JWT(r).IssueJWT(
-		&jwt.AuthClaim{
-			Nullifier: claim.Nullifier,
-			Type:      jwt.AccessTokenType,
-		},
-	)
-
+	access, refresh, aexp, rexp, err := issueJWTs(r, claim.Address)
 	if err != nil {
-		Log(r).WithError(err).WithField("user", claim.Nullifier).Error("failed to issuer JWT token")
+		Log(r).WithError(err).WithField("address", claim.Address).Error("failed to issue JWTs")
 		ape.RenderErr(w, problems.InternalError())
 		return
-	}
-
-	refresh, rexp, err := JWT(r).IssueJWT(
-		&jwt.AuthClaim{
-			Nullifier: claim.Nullifier,
-			Type:      jwt.RefreshTokenType,
-		},
-	)
-
-	if err != nil {
-		Log(r).WithError(err).WithField("user", claim.Nullifier).Error("failed to issuer JWT token")
-		ape.RenderErr(w, problems.InternalError())
-		return
-	}
-
-	resp := resources.TokenResponse{
-		Data: resources.Token{
-			Key: resources.Key{
-				ID:   claim.Nullifier,
-				Type: resources.TOKEN,
-			},
-			Attributes: resources.TokenAttributes{
-				AccessToken: resources.Jwt{
-					Token:     access,
-					TokenType: string(jwt.AccessTokenType),
-				},
-				RefreshToken: resources.Jwt{
-					Token:     refresh,
-					TokenType: string(jwt.RefreshTokenType),
-				},
-			},
-		},
 	}
 
 	Cookies(r).SetAccessToken(w, access, aexp)
 	Cookies(r).SetRefreshToken(w, refresh, rexp)
-	ape.Render(w, resp)
+	ape.Render(w, newTokenResponse(claim.Address, access, refresh))
 }

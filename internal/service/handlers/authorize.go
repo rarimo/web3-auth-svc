@@ -1,12 +1,10 @@
 package handlers
 
 import (
-	"encoding/json"
-	"math/big"
+	"fmt"
 	"net/http"
+	"time"
 
-	"github.com/ethereum/go-ethereum/common/hexutil"
-	zkptypes "github.com/iden3/go-rapidsnark/types"
 	"github.com/rarimo/web3-auth-svc/internal/jwt"
 	"github.com/rarimo/web3-auth-svc/internal/service/requests"
 	"github.com/rarimo/web3-auth-svc/resources"
@@ -22,56 +20,40 @@ func Authorize(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if Verifier(r).Enabled {
-		var proof zkptypes.ZKProof
-		if err := json.Unmarshal(req.Data.Attributes.Proof, &proof); err != nil {
-			ape.RenderErr(w, problems.BadRequest(err)...)
-			return
-		}
+	var (
+		address   = req.Data.ID
+		signature = req.Data.Attributes.Signature
 
-		nullifier, err := hexutil.Decode(req.Data.ID)
-		if err != nil {
-			ape.RenderErr(w, problems.BadRequest(err)...)
-			return
-		}
-
-		if err = Verifier(r).VerifyProof(new(big.Int).SetBytes(nullifier).String(), &proof); err != nil {
-			Log(r).WithError(err).Info("Failed to verify proof")
-			ape.RenderErr(w, problems.Unauthorized())
-			return
-		}
-	}
-
-	access, aexp, err := JWT(r).IssueJWT(
-		&jwt.AuthClaim{
-			Nullifier: req.Data.ID,
-			Type:      jwt.AccessTokenType,
-		},
+		log = Log(r).WithFields(map[string]any{
+			"address":   address,
+			"signature": signature,
+		})
 	)
 
+	err = AuthVerifier(r).VerifySignature(signature, address)
 	if err != nil {
-		Log(r).WithError(err).WithField("user", req.Data.ID).Error("failed to issuer JWT token")
+		log.WithError(err).Info("Failed to verify signature")
+		ape.RenderErr(w, problems.Unauthorized())
+		return
+	}
+
+	access, refresh, aexp, rexp, err := issueJWTs(r, address)
+	if err != nil {
+		log.WithError(err).Error("failed to issue JWTs")
 		ape.RenderErr(w, problems.InternalError())
 		return
 	}
 
-	refresh, rexp, err := JWT(r).IssueJWT(
-		&jwt.AuthClaim{
-			Nullifier: req.Data.ID,
-			Type:      jwt.RefreshTokenType,
-		},
-	)
+	Cookies(r).SetAccessToken(w, access, aexp)
+	Cookies(r).SetRefreshToken(w, refresh, rexp)
+	ape.Render(w, newTokenResponse(address, access, refresh))
+}
 
-	if err != nil {
-		Log(r).WithError(err).WithField("user", req.Data.ID).Error("failed to issuer JWT token")
-		ape.RenderErr(w, problems.InternalError())
-		return
-	}
-
-	resp := resources.TokenResponse{
+func newTokenResponse(address, access, refresh string) resources.TokenResponse {
+	return resources.TokenResponse{
 		Data: resources.Token{
 			Key: resources.Key{
-				ID:   req.Data.ID,
+				ID:   address,
 				Type: resources.TOKEN,
 			},
 			Attributes: resources.TokenAttributes{
@@ -86,8 +68,28 @@ func Authorize(w http.ResponseWriter, r *http.Request) {
 			},
 		},
 	}
+}
 
-	Cookies(r).SetAccessToken(w, access, aexp)
-	Cookies(r).SetRefreshToken(w, refresh, rexp)
-	ape.Render(w, resp)
+func issueJWTs(r *http.Request, address string) (access, refresh string, aexp, rexp time.Time, err error) {
+	access, aexp, err = JWT(r).IssueJWT(
+		&jwt.AuthClaim{
+			Address: address,
+			Type:    jwt.AccessTokenType,
+		},
+	)
+	if err != nil {
+		return "", "", aexp, rexp, fmt.Errorf("failed to issue JWT access token: %w", err)
+	}
+
+	refresh, rexp, err = JWT(r).IssueJWT(
+		&jwt.AuthClaim{
+			Address: address,
+			Type:    jwt.RefreshTokenType,
+		},
+	)
+	if err != nil {
+		return "", "", aexp, rexp, fmt.Errorf("failed to issue JWT access token: %w", err)
+	}
+
+	return access, refresh, aexp, rexp, nil
 }
