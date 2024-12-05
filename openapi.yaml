@@ -7,13 +7,53 @@ servers:
   - url: 'https://api.orgs.app.stage.rarime.com/integrations/web3-auth-svc'
     description: RariMe Stage envirinment
 paths:
-  /v1/authorize:
+  /integrations/web3-auth-svc/v1/admin:
+    post:
+      tags:
+        - Authorize
+      summary: Authorize admin user
+      description: Authorize admin user using password
+      operationId: authorizeAdmin
+      requestBody:
+        required: true
+        content:
+          application/vnd.api+json:
+            schema:
+              type: object
+              required:
+                - data
+              properties:
+                data:
+                  $ref: '#/components/schemas/AuthorizeAdmin'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/vnd.api+json:
+              schema:
+                type: object
+                required:
+                  - data
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Token'
+        '400':
+          $ref: '#/components/responses/invalidParameter'
+        '401':
+          description: Invalid password
+          content:
+            application/vnd.api+json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        '500':
+          $ref: '#/components/responses/internalError'
+  /integrations/web3-auth-svc/v1/authorize:
     post:
       tags:
         - Authorize
       summary: Authorize user
       description: |
-        Authorize user by ZKP and receive JWT.
+        Authorize user with signed challenge and receive JWT.
       operationId: authorize
       requestBody:
         required: true
@@ -40,18 +80,22 @@ paths:
                     $ref: '#/components/schemas/Token'
         '400':
           $ref: '#/components/responses/invalidParameter'
+        '401':
+          $ref: '#/components/responses/invalidAuth'
+        '404':
+          $ref: '#/components/responses/notFound'
         '500':
           $ref: '#/components/responses/internalError'
-  '/v1/authorize/{nullifier}/challenge':
+  '/integrations/web3-auth-svc/v1/authorize/{address}/challenge':
     get:
       tags:
         - Authorize
       summary: Request challenge
       description: |
-        Request challenge to generate Query proof with
+        Request challenge to sign
       operationId: challenge
       parameters:
-        - $ref: '#/components/parameters/pathNullifier'
+        - $ref: '#/components/parameters/pathAddress'
       responses:
         '200':
           description: Success
@@ -66,17 +110,15 @@ paths:
                     $ref: '#/components/schemas/Challenge'
         '400':
           $ref: '#/components/responses/invalidParameter'
-        '401':
-          $ref: '#/components/responses/invalidAuth'
         '500':
           $ref: '#/components/responses/internalError'
-  /v1/refresh:
+  /integrations/web3-auth-svc/v1/refresh:
     get:
       tags:
         - Authorize
       summary: Refresh JWT
       security:
-        - JWTAuth: []
+        - BearerAuth: []
       description: |
         Issue new JWT based on refresh token
       operationId: refresh
@@ -92,19 +134,17 @@ paths:
                 properties:
                   data:
                     $ref: '#/components/schemas/Token'
-        '400':
-          $ref: '#/components/responses/invalidParameter'
         '401':
           $ref: '#/components/responses/invalidAuth'
         '500':
           $ref: '#/components/responses/internalError'
-  /v1/validate:
+  /integrations/web3-auth-svc/v1/validate:
     get:
       tags:
         - Authorize
       summary: Validate JWT
       security:
-        - JWTAuth: []
+        - BearerAuth: []
       description: |
         Validates JWT provided in Bearer Header and returns decoded claims
       operationId: validate
@@ -119,15 +159,9 @@ paths:
                   - data
                 properties:
                   data:
-                    type: array
-                    items:
-                      $ref: '#/components/schemas/ValidationResult'
-        '400':
-          $ref: '#/components/responses/invalidParameter'
+                    $ref: '#/components/schemas/Validation'
         '401':
           $ref: '#/components/responses/invalidAuth'
-        '500':
-          $ref: '#/components/responses/internalError'
 components:
   schemas:
     Authorize:
@@ -140,13 +174,31 @@ components:
           properties:
             attributes:
               required:
-                - proof
+                - signature
               type: object
               properties:
-                proof:
-                  type: object
-                  format: json.RawMessage
-                  description: JSON-encoded Query ZK-proof.
+                signature:
+                  type: string
+                  pattern: '^0x[0-9a-fA-F]{130}$'
+                  example: '0x0bf7b3c454fedc179af06cd02f62fb3d89b2ac16962d50137330ffeebe9fac5f6bb2d1f2a971834a8eb84ce0a28894578286812a1131cfe7921b2d325d0b06041c'
+                  description: 'Backend-generated challenge, signed by user'
+    AuthorizeAdmin:
+      allOf:
+        - $ref: '#/components/schemas/AuthorizeKey'
+        - type: object
+          x-go-is-request: true
+          required:
+            - attributes
+          properties:
+            attributes:
+              required:
+                - password
+              type: object
+              properties:
+                password:
+                  type: string
+                  example: whoami
+                  description: Password to get admin permissions
     AuthorizeKey:
       type: object
       required:
@@ -155,9 +207,9 @@ components:
       properties:
         id:
           type: string
-          example: 0x123...abc
-          pattern: '^0x[0-9a-fA-F]{64}$'
-          description: User nullifier 32 bytes
+          pattern: '^0x[0-9a-fA-F]{40}$'
+          example: 0x2a2288cdceEeb2CF60...
+          description: Address that corresponds to users keypair
         type:
           type: string
           enum:
@@ -175,10 +227,8 @@ components:
               properties:
                 challenge:
                   type: string
-                  description: |
-                    Base64 encoded challenge. Use it to generate Query ZK-proof.
-                    Decode base64 string and convert into big-endian decimal number.
-                  example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9
+                  description: Random hex strings challenge which must be signed by user to authorize
+                  example: abcdef...123456
     ChallengeKey:
       type: object
       required:
@@ -188,8 +238,8 @@ components:
         id:
           type: string
           example: 0x123...abc
-          pattern: '^0x[0-9a-fA-F]{64}$'
-          description: User nullifier 32 bytes
+          pattern: '^0x[0-9a-fA-F]{40}$'
+          description: User address
         type:
           type: string
           enum:
@@ -198,13 +248,18 @@ components:
       description: Authorized user personal data
       type: object
       required:
-        - nullifier
+        - address
+        - is_admin
       properties:
-        nullifier:
+        address:
           type: string
           example: 0x123...abc
-          pattern: '^0x[0-9a-fA-F]{64}$'
-          description: Nullifier authorized with
+          pattern: '^0x[0-9a-fA-F]{40}$'
+          description: Address authorized with
+        is_admin:
+          type: bool
+          example: false
+          description: Whether the user has a admin permissions
     Errors:
       description: 'Standard JSON:API error'
       type: object
@@ -282,14 +337,14 @@ components:
           type: string
           example: 0x123...abc
           pattern: '^0x[0-9a-fA-F]{64}$'
-          description: User nullifier 32 bytes
+          description: User address string
         type:
           type: string
           enum:
             - token
-    ValidationResult:
+    Validation:
       allOf:
-        - $ref: '#/components/schemas/ValidationResultKey'
+        - $ref: '#/components/schemas/ValidationKey'
         - type: object
           required:
             - attributes
@@ -303,7 +358,7 @@ components:
                   type: array
                   items:
                     $ref: '#/components/schemas/Claim'
-    ValidationResultKey:
+    ValidationKey:
       type: object
       required:
         - id
@@ -312,8 +367,8 @@ components:
         id:
           type: string
           example: 0x123...abc
-          pattern: '^0x[0-9a-fA-F]{64}$'
-          description: User nullifier 32 bytes
+          pattern: '^0x[0-9a-fA-F]{40}$'
+          description: User address
         type:
           type: string
           enum:
@@ -361,15 +416,15 @@ components:
       schema:
         type: integer
       description: The number of a page to return.
-    pathNullifier:
+    pathAddress:
       in: path
-      name: nullifier
+      name: address
       required: true
       schema:
         type: string
         example: 0x123...abc
-        pattern: '^0x[0-9a-fA-F]{64}$'
-        description: User nullifier 32 bytes
+        pattern: '^0x[0-9a-fA-F]{40}$'
+        description: User address 20 bytes
     sortingParam:
       in: query
       name: 'page[order]'
@@ -382,7 +437,7 @@ components:
         default: desc
         description: 'Order of records on the page. If sortingParam is not specified, order of records is by default sorted by ID.'
   securitySchemes:
-    JWTAuth:
+    BearerAuth:
       type: http
       scheme: bearer
       bearerFormat: JWT
