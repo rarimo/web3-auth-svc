@@ -15,6 +15,8 @@ type Config interface {
 	jwt.Jwter
 	cookies.Cookier
 	challenger.AuthVerifierer
+
+	Admin() *Admin
 }
 
 type config struct {

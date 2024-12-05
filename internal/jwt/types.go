@@ -10,6 +10,7 @@ const (
 	ClaimAddress             = "sub"
 	ClaimTokenType           = "type"
 	ClaimExpirationTimestamp = "exp"
+	ClaimIsAdmin             = "is_admin"
 )
 
 type TokenType string
@@ -27,6 +28,7 @@ var (
 type AuthClaim struct {
 	Address string
 	Type    TokenType
+	IsAdmin bool
 }
 
 // RawJWT represents helper structure to provide setter and getter methods to work with JWT claims
@@ -48,6 +50,11 @@ func (r *RawJWT) SetExpirationTimestamp(expiration time.Time) *RawJWT {
 
 func (r *RawJWT) SetTokenType(typ TokenType) *RawJWT {
 	r.claims[ClaimTokenType] = typ
+	return r
+}
+
+func (r *RawJWT) SetIsAdmin(isAdmin bool) *RawJWT {
+	r.claims[ClaimIsAdmin] = isAdmin
 	return r
 }
 
@@ -79,4 +86,15 @@ func (r *RawJWT) TokenType() (typ TokenType, ok bool) {
 	}
 
 	return TokenType(str), true
+}
+
+func (r *RawJWT) IsAdmin() (res bool, ok bool) {
+	var val interface{}
+
+	if val, ok = r.claims[ClaimIsAdmin]; !ok {
+		return
+	}
+
+	res, ok = val.(bool)
+	return
 }

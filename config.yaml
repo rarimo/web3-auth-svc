@@ -17,3 +17,7 @@ cookies:
 
 auth_verifier:
   disabled: true
+
+admin:
+  disabled: false
+  password_hash: 0x...

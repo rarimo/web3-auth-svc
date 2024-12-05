@@ -31,6 +31,10 @@ func (i *JWTIssuer) IssueJWT(claim *AuthClaim) (token string, exp time.Time, err
 
 	raw := (&RawJWT{make(jwt.MapClaims)}).SetAddress(claim.Address).SetTokenType(claim.Type).SetExpirationTimestamp(exp)
 
+	if claim.IsAdmin {
+		raw.SetIsAdmin(true)
+	}
+
 	token, err = jwt.NewWithClaims(jwt.SigningMethodHS256, raw.claims).SignedString(i.prv)
 	return
 }
@@ -64,6 +68,8 @@ func (i *JWTIssuer) ValidateJWT(str string) (claim *AuthClaim, err error) {
 	if !ok {
 		return nil, errors.New("invalid address: failed to parse")
 	}
+
+	claim.IsAdmin, _ = raw.IsAdmin()
 
 	claim.Type, ok = raw.TokenType()
 	if !ok {

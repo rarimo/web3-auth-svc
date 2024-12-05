@@ -9,3 +9,7 @@ func UserGrant(address string) Grant {
 		return claim.Address == address
 	}
 }
+
+func AdminGrant(claim resources.Claim) bool {
+	return claim.IsAdmin
+}
