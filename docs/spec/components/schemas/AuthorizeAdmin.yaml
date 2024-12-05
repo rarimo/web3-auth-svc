@@ -1,0 +1,16 @@
+allOf:
+  - $ref: '#/components/schemas/AuthorizeKey'
+  - type: object
+    x-go-is-request: true
+    required:
+      - attributes
+    properties:
+      attributes:
+        required:
+          - password
+        type: object
+        properties:
+          password:
+            type: string
+            example: whoami
+            description: Password to get admin permissions
