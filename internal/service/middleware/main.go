@@ -11,7 +11,7 @@ import (
 	"gitlab.com/distributed_lab/logan/v3"
 )
 
-func AuthMiddleware(issuer *jwt.JWTIssuer, log *logan.Entry, tokenType jwt.TokenType) func(http.Handler) http.Handler {
+func AuthMiddleware(log *logan.Entry, tokenType jwt.TokenType) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			token, err := pkg.GetToken(r, tokenType)
@@ -21,7 +21,7 @@ func AuthMiddleware(issuer *jwt.JWTIssuer, log *logan.Entry, tokenType jwt.Token
 				return
 			}
 
-			claim, err := issuer.ValidateJWT(token)
+			claim, err := handlers.JWT(r).ValidateJWT(token)
 			if err != nil {
 				log.WithError(err).Debug("failed validate bearer token")
 				ape.RenderErr(w, problems.Unauthorized())

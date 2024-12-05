@@ -3,12 +3,12 @@ package auth
 import (
 	"encoding/json"
 	"fmt"
+	"net/http"
+	"net/url"
+
 	"github.com/rarimo/web3-auth-svc/internal/cookies"
 	"github.com/rarimo/web3-auth-svc/internal/jwt"
-	"net/http"
-
 	"github.com/rarimo/web3-auth-svc/resources"
-	"gitlab.com/distributed_lab/logan/v3/errors"
 )
 
 const (
@@ -21,9 +21,14 @@ type Client struct {
 }
 
 func (a *Client) ValidateJWT(r *http.Request) (claims []resources.Claim, err error) {
-	req, err := http.NewRequest("GET", fmt.Sprintf("%s/%s", a.Addr, FullValidatePath), nil)
+	validationURL, err := url.JoinPath(a.Addr, FullValidatePath)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to create request")
+		return nil, fmt.Errorf("failed to join path: %w", err)
+	}
+
+	req, err := http.NewRequest("GET", validationURL, nil)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create request: %w", err)
 	}
 
 	req.Header.Set(jwt.AuthorizationHeaderName, r.Header.Get(jwt.AuthorizationHeaderName))
@@ -31,14 +36,14 @@ func (a *Client) ValidateJWT(r *http.Request) (claims []resources.Claim, err err
 
 	resp, err := a.Do(req)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to execute validate request")
+		return nil, fmt.Errorf("failed to execute validate request: %w", err)
 	}
 
 	defer resp.Body.Close()
 
-	body := resources.ValidationResultResponse{}
+	body := resources.ValidationResponse{}
 	if err = json.NewDecoder(resp.Body).Decode(&body); err != nil {
-		return nil, errors.Wrap(err, "failed to unmarshall response body")
+		return nil, fmt.Errorf("failed to unmarshall response body: %w", err)
 	}
 
 	return body.Data.Attributes.Claims, nil

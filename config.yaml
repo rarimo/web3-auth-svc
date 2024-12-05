@@ -6,7 +6,7 @@ listener:
   addr: :8000
 
 jwt:
-  secret_key: 0xbcb14d08dc1472b80f49eaf72f0873ac314a7146083bbf3694df8c3238949f2ec0971427f5509382a2812c700e541e328cd6ec65a1383c3ca435cdf55862dc4b
+  secret_key: 0x...
   access_expiration_time: 12h
   refresh_expiration_time: 24h
 
@@ -15,6 +15,9 @@ cookies:
   secure: true
   same_site: 4
 
-verifier:
-  schema: 12345
-  enabled: false
+auth_verifier:
+  disabled: true
+
+admin:
+  disabled: false
+  password_hash: 0x...

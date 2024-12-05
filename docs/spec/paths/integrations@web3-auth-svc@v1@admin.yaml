@@ -1,0 +1,39 @@
+post:
+  tags:
+    - Authorize
+  summary: Authorize admin user
+  description: Authorize admin user using password
+  operationId: authorizeAdmin
+  requestBody:
+    required: true
+    content:
+      application/vnd.api+json:
+        schema:
+          type: object
+          required:
+            - data
+          properties:
+            data:
+              $ref: '#/components/schemas/AuthorizeAdmin'
+  responses:
+    200:
+      description: OK
+      content:
+        application/vnd.api+json:
+          schema:
+            type: object
+            required:
+              - data
+            properties:
+              data:
+                $ref: '#/components/schemas/Token'
+    400:
+      $ref: '#/components/responses/invalidParameter'
+    401:
+      description: Invalid password
+      content:
+        application/vnd.api+json:
+          schema:
+            $ref: '#/components/schemas/Errors'
+    500:
+      $ref: '#/components/responses/internalError'

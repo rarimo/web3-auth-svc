@@ -6,6 +6,8 @@ package resources
 
 // Authorized user personal data
 type Claim struct {
-	// Nullifier authorized with
-	Nullifier string `json:"nullifier"`
+	// Address authorized with
+	Address string `json:"address"`
+	// Whether the user has a admin permissions
+	IsAdmin bool `json:"is_admin"`
 }

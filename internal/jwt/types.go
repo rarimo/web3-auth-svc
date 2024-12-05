@@ -3,13 +3,14 @@ package jwt
 import (
 	"time"
 
-	jwt "github.com/golang-jwt/jwt/v5"
+	"github.com/golang-jwt/jwt/v5"
 )
 
 const (
-	NullifierClaimName           = "sub"
-	ExpirationTimestampClaimName = "exp"
-	TokenTypeClaimName           = "type"
+	ClaimAddress             = "sub"
+	ClaimTokenType           = "type"
+	ClaimExpirationTimestamp = "exp"
+	ClaimIsAdmin             = "is_admin"
 )
 
 type TokenType string
@@ -25,8 +26,9 @@ var (
 
 // AuthClaim is a helper structure to organize all claims in one entity
 type AuthClaim struct {
-	Nullifier string
-	Type      TokenType
+	Address string
+	Type    TokenType
+	IsAdmin bool
 }
 
 // RawJWT represents helper structure to provide setter and getter methods to work with JWT claims
@@ -36,32 +38,32 @@ type RawJWT struct {
 
 // Setters
 
-func (r *RawJWT) SetNullifier(nullifier string) *RawJWT {
-	r.claims[NullifierClaimName] = nullifier
+func (r *RawJWT) SetAddress(sub string) *RawJWT {
+	r.claims[ClaimAddress] = sub
 	return r
 }
 
 func (r *RawJWT) SetExpirationTimestamp(expiration time.Time) *RawJWT {
-	r.claims[ExpirationTimestampClaimName] = jwt.NewNumericDate(expiration)
+	r.claims[ClaimExpirationTimestamp] = jwt.NewNumericDate(expiration)
 	return r
 }
 
-func (r *RawJWT) SetTokenAccess() *RawJWT {
-	r.claims[TokenTypeClaimName] = AccessTokenType
+func (r *RawJWT) SetTokenType(typ TokenType) *RawJWT {
+	r.claims[ClaimTokenType] = typ
 	return r
 }
 
-func (r *RawJWT) SetTokenRefresh() *RawJWT {
-	r.claims[TokenTypeClaimName] = RefreshTokenType
+func (r *RawJWT) SetIsAdmin(isAdmin bool) *RawJWT {
+	r.claims[ClaimIsAdmin] = isAdmin
 	return r
 }
 
 // Getters
 
-func (r *RawJWT) Nullifier() (res string, ok bool) {
+func (r *RawJWT) Address() (res string, ok bool) {
 	var val interface{}
 
-	if val, ok = r.claims[NullifierClaimName]; !ok {
+	if val, ok = r.claims[ClaimAddress]; !ok {
 		return
 	}
 
@@ -75,7 +77,7 @@ func (r *RawJWT) TokenType() (typ TokenType, ok bool) {
 		str string
 	)
 
-	if val, ok = r.claims[TokenTypeClaimName]; !ok {
+	if val, ok = r.claims[ClaimTokenType]; !ok {
 		return
 	}
 
@@ -84,4 +86,15 @@ func (r *RawJWT) TokenType() (typ TokenType, ok bool) {
 	}
 
 	return TokenType(str), true
+}
+
+func (r *RawJWT) IsAdmin() (res bool, ok bool) {
+	var val interface{}
+
+	if val, ok = r.claims[ClaimIsAdmin]; !ok {
+		return
+	}
+
+	res, ok = val.(bool)
+	return
 }

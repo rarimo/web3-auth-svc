@@ -21,21 +21,19 @@ func Validate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	resp := resources.ValidationResultResponse{
-		Data: resources.ValidationResult{
+	ape.Render(w, resources.ValidationResponse{
+		Data: resources.Validation{
 			Key: resources.Key{
-				ID:   claim.Nullifier,
+				ID:   claim.Address,
 				Type: resources.VALIDATION,
 			},
-			Attributes: resources.ValidationResultAttributes{
+			Attributes: resources.ValidationAttributes{
 				Claims: []resources.Claim{
 					{
-						Nullifier: claim.Nullifier,
+						Address: claim.Address,
 					},
 				},
 			},
 		},
-	}
-
-	ape.Render(w, resp)
+	})
 }

@@ -20,7 +20,6 @@ func TestGeneratePrivateKey(t *testing.T) {
 }
 
 func TestJWT(t *testing.T) {
-
 	issuer := JWTIssuer{
 		prv:               make([]byte, 64),
 		accessExpiration:  time.Hour,
@@ -32,8 +31,8 @@ func TestJWT(t *testing.T) {
 
 	jwt, _, err := issuer.IssueJWT(
 		&AuthClaim{
-			Nullifier: "0x31ba24c27a7d9b14fef5e48a26e79566525646ff341fd7c0855932c28cca452c",
-			Type:      AccessTokenType,
+			Address: "0x31ba24c27a7d9b14fef5e48a26e79566525646ff",
+			Type:    AccessTokenType,
 		},
 	)
 	assert.NilError(t, err)
@@ -41,6 +40,6 @@ func TestJWT(t *testing.T) {
 	claim, err := issuer.ValidateJWT(jwt)
 	assert.NilError(t, err)
 
-	assert.Equal(t, claim.Nullifier, "0x31ba24c27a7d9b14fef5e48a26e79566525646ff341fd7c0855932c28cca452c")
+	assert.Equal(t, claim.Address, "0x31ba24c27a7d9b14fef5e48a26e79566525646ff")
 	assert.Equal(t, claim.Type, AccessTokenType)
 }

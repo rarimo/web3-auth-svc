@@ -4,6 +4,6 @@
 
 package resources
 
-type ValidationResultAttributes struct {
+type ValidationAttributes struct {
 	Claims []Claim `json:"claims"`
 }
