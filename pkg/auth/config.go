@@ -27,10 +27,10 @@ type auther struct {
 func (c *auther) Auth() *Client {
 	return c.once.Do(func() interface{} {
 		var cfg = struct {
-			Addr    string `fig:"addr,required"`
 			Enabled bool   `fig:"enabled"`
+			Addr    string `fig:"addr"`
 		}{
-			Enabled: true,
+			Enabled: false,
 		}
 
 		err := figure.
