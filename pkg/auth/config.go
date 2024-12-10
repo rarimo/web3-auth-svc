@@ -43,8 +43,9 @@ func (c *auther) Auth() *Client {
 		}
 
 		return &Client{
-			Client: &http.Client{},
-			Addr:   cfg.Addr,
+			Client:  &http.Client{},
+			Addr:    cfg.Addr,
+			Enabled: cfg.Enabled,
 		}
 	}).(*Client)
 }
