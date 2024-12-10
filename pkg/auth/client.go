@@ -17,7 +17,8 @@ const (
 
 type Client struct {
 	*http.Client
-	Addr string
+	Addr    string
+	Enabled bool
 }
 
 func (a *Client) ValidateJWT(r *http.Request) (claims []resources.Claim, err error) {
