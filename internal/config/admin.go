@@ -13,7 +13,7 @@ import (
 )
 
 type Admin struct {
-	Admin    string `fig:"password_hash,required"`
+	Admin    string `fig:"password_hash"`
 	Disabled bool   `fig:"disabled"`
 }
 
